@@ -1,6 +1,7 @@
 from django.urls import path
+from .views import LoginView, RegistrationView
 
-# Das ist vorerst ein Platzhalter, damit der Server startet
 urlpatterns = [
-
+    path('registration/', RegistrationView.as_view(), name='registration'),
+    path('login/', LoginView.as_view(), name='login'),
 ]
