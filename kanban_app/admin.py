@@ -1,4 +1,10 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from django.contrib import admin
+
+# Lokale Importe
 from .models import Board, Comment, Task
 
 

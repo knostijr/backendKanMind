@@ -1,4 +1,10 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from rest_framework import serializers
+
+# Lokale Importe
 from kanban_app.models import Board, Comment, Task
 
 

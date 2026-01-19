@@ -1,3 +1,7 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from rest_framework import permissions
 
 

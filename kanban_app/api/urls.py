@@ -1,6 +1,12 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
+
+# Lokale Importe
 from .views import BoardViewSet, CommentViewSet, TaskViewSet
 
 # Haupt-Router für Boards und Tasks

@@ -1,8 +1,13 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+# Lokale Importe
 from kanban_app.models import Board, Comment, Task
 from .permissions import (
     IsCommentAuthorOrReadOnly,

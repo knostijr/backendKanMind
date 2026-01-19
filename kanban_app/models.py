@@ -1,3 +1,7 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from django.contrib.auth.models import User
 from django.db import models
 

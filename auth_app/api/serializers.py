@@ -1,6 +1,13 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+
+# Lokale Importe
+# (keine benötigt)
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """

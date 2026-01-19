@@ -1,4 +1,10 @@
+# Standardbibliothek
+# (keine benötigt)
+
+# Drittanbieter (Third-party)
 from django.urls import path
+
+# Lokale Importe
 from .views import LoginView, RegistrationView
 
 urlpatterns = [
