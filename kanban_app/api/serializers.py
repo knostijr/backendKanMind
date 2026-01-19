@@ -15,7 +15,7 @@ class CommentSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(
         source='author.username'
     )
-    
+
     class Meta:
         model = Comment
         fields = [
@@ -41,7 +41,7 @@ class TaskSerializer(serializers.ModelSerializer):
         source='reviewer.username'
     )
     comments_count = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Task
         fields = [
@@ -61,7 +61,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'comments_count'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-    
+
     def get_comments_count(self, obj):
         """
         Zähle Anzahl der Comments für diese Task
@@ -74,7 +74,7 @@ class TaskDetailSerializer(TaskSerializer):
     Detaillierter Task-Serializer mit allen Comments
     """
     comments = CommentSerializer(many=True, read_only=True)
-    
+
     class Meta(TaskSerializer.Meta):
         fields = TaskSerializer.Meta.fields + ['comments']
 
@@ -87,7 +87,7 @@ class BoardSerializer(serializers.ModelSerializer):
         source='owner.username'
     )
     tasks_count = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Board
         fields = [
@@ -101,7 +101,7 @@ class BoardSerializer(serializers.ModelSerializer):
             'tasks_count'
         ]
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
-    
+
     def get_tasks_count(self, obj):
         """
         Zähle Anzahl der Tasks in diesem Board
@@ -114,6 +114,6 @@ class BoardDetailSerializer(BoardSerializer):
     Detaillierter Board-Serializer mit allen Tasks
     """
     tasks = TaskSerializer(many=True, read_only=True)
-    
+
     class Meta(BoardSerializer.Meta):
         fields = BoardSerializer.Meta.fields + ['tasks']

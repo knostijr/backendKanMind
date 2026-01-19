@@ -1,6 +1,5 @@
 # Standardbibliothek
 # (keine benötigt)
-
 # Drittanbieter (Third-party)
 from django.urls import path
 

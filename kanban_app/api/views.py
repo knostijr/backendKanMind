@@ -22,10 +22,11 @@ from .serializers import (
     TaskSerializer
 )
 
+
 class BoardViewSet(viewsets.ModelViewSet):
     """
     ViewSet für Board CRUD-Operationen
-    
+
     Endpoints:
     - GET /api/boards/ - Liste aller Boards
     - POST /api/boards/ - Board erstellen
@@ -36,7 +37,7 @@ class BoardViewSet(viewsets.ModelViewSet):
     """
     queryset = Board.objects.all()
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    
+
     def get_serializer_class(self):
         """
         Nutze DetailSerializer für einzelne Boards
@@ -44,19 +45,19 @@ class BoardViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return BoardDetailSerializer
         return BoardSerializer
-    
+
     def get_queryset(self):
         """
         User sieht nur eigene Boards
         """
         return Board.objects.filter(owner=self.request.user)
-    
+
     def perform_create(self, serializer):
         """
         Setze Owner automatisch auf aktuellen User
         """
         serializer.save(owner=self.request.user)
-        
+
     @action(detail=False, methods=['get'])
     def email_check(self, request):
         """
@@ -69,16 +70,17 @@ class BoardViewSet(viewsets.ModelViewSet):
                 {"error": "Email parameter required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         from django.contrib.auth.models import User
         exists = User.objects.filter(email=email).exists()
-        
+
         return Response({"available": not exists})
+
 
 class TaskViewSet(viewsets.ModelViewSet):
     """
     ViewSet für Task CRUD-Operationen
-    
+
     Endpoints:
     - GET /api/tasks/ - Liste aller Tasks
     - POST /api/tasks/ - Task erstellen
@@ -90,7 +92,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     queryset = Task.objects.all()
     permission_classes = [IsAuthenticated, IsTaskAssignedOrOwner]
-    
+
     def get_serializer_class(self):
         """
         Nutze DetailSerializer für einzelne Tasks
@@ -98,7 +100,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return TaskDetailSerializer
         return TaskSerializer
-    
+
     def get_queryset(self):
         """
         User sieht nur Tasks aus eigenen Boards
@@ -110,7 +112,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         ) | Task.objects.filter(
             assigned_to=user
         )
-    
+
     @action(detail=False, methods=['get'])
     def assigned_to_me(self, request):
         """
@@ -120,7 +122,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         tasks = Task.objects.filter(assigned_to=request.user)
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
-    
+
     @action(detail=False, methods=['get'])
     def reviewing(self, request):
         """
@@ -135,7 +137,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """
     ViewSet für Comment CRUD-Operationen
-    
+
     Endpoints:
     - GET /api/tasks/{task_id}/comments/ - Alle Comments einer Task
     - POST /api/tasks/{task_id}/comments/ - Comment erstellen
@@ -143,14 +145,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsCommentAuthorOrReadOnly]
-    
+
     def get_queryset(self):
         """
         Filtere Comments nach Task
         """
         task_id = self.kwargs.get('task_pk')
         return Comment.objects.filter(task_id=task_id)
-    
+
     def perform_create(self, serializer):
         """
         Setze Author und Task automatisch

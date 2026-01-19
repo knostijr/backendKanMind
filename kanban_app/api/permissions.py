@@ -15,9 +15,10 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Lesezugriff für alle authentifizierten User
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Schreibzugriff nur für Owner
         return obj.owner == request.user
+
 
 class IsTaskAssignedOrOwner(permissions.BasePermission):
     """
@@ -29,13 +30,14 @@ class IsTaskAssignedOrOwner(permissions.BasePermission):
         # Lesezugriff für alle
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Schreibzugriff für Board-Owner oder Assigned User
         return (
             obj.board.owner == request.user or
             obj.assigned_to == request.user
         )
-        
+
+
 class IsCommentAuthorOrReadOnly(permissions.BasePermission):
     """
     Custom Permission für Comments:
@@ -46,6 +48,6 @@ class IsCommentAuthorOrReadOnly(permissions.BasePermission):
         # Lesezugriff für alle
         if request.method in permissions.SAFE_METHODS:
             return True
-        
+
         # Schreibzugriff nur für Autor
         return obj.author == request.user
