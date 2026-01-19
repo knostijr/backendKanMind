@@ -15,12 +15,24 @@ from .serializers import UserRegistrationSerializer, UserSerializer
 
 class RegistrationView(APIView):
     """
-    POST /api/registration/
-    Registriert einen neuen User
+    API-Endpunkt für die Registrierung neuer Benutzer.
+    
+    Ermöglicht es Besuchern, ein neues Benutzerkonto zu erstellen, 
+    indem sie die erforderlichen Daten übermitteln.
     """
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Verarbeitet die Registrierungsdaten und erstellt einen neuen User.
+
+        Args:
+            request: Das Request-Objekt, das die Benutzerdaten im Body enthält.
+
+        Returns:
+            Response: JSON mit Benutzerdaten bei Erfolg (201) 
+                      oder Fehlermeldungen bei Validierungsfehlern (400).
+        """
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -39,24 +51,38 @@ class RegistrationView(APIView):
 
 class LoginView(APIView):
     """
-    POST /api/login/
-    Authentifiziert User und gibt JWT-Tokens zurück
+    API-Endpunkt für die Authentifizierung von Benutzern.
+    
+    Prüft die Anmeldedaten und stellt bei Erfolg JSON Web Tokens (JWT) aus.
     """
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Validiert die Anmeldedaten und generiert Access- sowie Refresh-Tokens.
+
+        Args:
+            request: Das Request-Objekt, das 'username' und 'password' enthält.
+
+        Returns:
+            Response: JSON mit Refresh-Token, Access-Token und Benutzerprofil bei Erfolg (200),
+                      Fehlermeldung bei fehlenden Daten (400) oder falschen Credentials (401).
+        """
         username = request.data.get('username')
         password = request.data.get('password')
 
+        # Überprüfung auf Vollständigkeit der Daten
         if not username or not password:
             return Response(
                 {"error": "Username and password required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Authentifizierung gegen die Django-Benutzerdatenbank
         user = authenticate(username=username, password=password)
 
         if user is not None:
+            # Erstellung der JWT-Tokens für den authentifizierten User
             refresh = RefreshToken.for_user(user)
             return Response({
                 "refresh": str(refresh),
@@ -64,6 +90,7 @@ class LoginView(APIView):
                 "user": UserSerializer(user).data
             })
 
+        # Rückgabe bei ungültigen Anmeldedaten
         return Response(
             {"error": "Invalid credentials"},
             status=status.HTTP_401_UNAUTHORIZED

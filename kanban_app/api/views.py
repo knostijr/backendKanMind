@@ -25,22 +25,20 @@ from .serializers import (
 
 class BoardViewSet(viewsets.ModelViewSet):
     """
-    ViewSet für Board CRUD-Operationen
+    Schnittstelle für die Verwaltung von Kanban-Boards.
 
-    Endpoints:
-    - GET /api/boards/ - Liste aller Boards
-    - POST /api/boards/ - Board erstellen
-    - GET /api/boards/{id}/ - Board-Details
-    - PATCH /api/boards/{id}/ - Board aktualisieren
-    - DELETE /api/boards/{id}/ - Board löschen
-    - GET /api/email-check/ - Email verfügbar prüfen
+    Bietet standardmäßige CRUD-Operationen und stellt sicher, dass Benutzer 
+    nur Zugriff auf ihre eigenen Boards haben.
     """
     queryset = Board.objects.all()
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
         """
-        Nutze DetailSerializer für einzelne Boards
+        Wählt den Serializer basierend auf der Aktion aus.
+        
+        Gibt BoardDetailSerializer für Detailansichten zurück, um tiefer 
+        verschachtelte Daten (wie Tasks) anzuzeigen.
         """
         if self.action == 'retrieve':
             return BoardDetailSerializer
@@ -48,21 +46,28 @@ class BoardViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        User sieht nur eigene Boards
+        Filtert die Boards so, dass nur die vom aktuellen Benutzer 
+        erstellten Boards zurückgegeben werden.
         """
         return Board.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
         """
-        Setze Owner automatisch auf aktuellen User
+        Verknüpft das neue Board beim Speichern automatisch mit dem 
+        aktuell angemeldeten Benutzer als Besitzer.
         """
         serializer.save(owner=self.request.user)
 
     @action(detail=False, methods=['get'])
     def email_check(self, request):
         """
-        GET /api/email-check/
-        Prüft ob eine E-Mail bereits registriert ist
+        Überprüft die Verfügbarkeit einer E-Mail-Adresse.
+
+        Query-Parameter:
+            ?email=<adresse>
+
+        Returns:
+            Response: Ein Boolean 'available', der angibt, ob die E-Mail noch frei ist.
         """
         email = request.query_params.get('email', None)
         if not email:
@@ -79,23 +84,18 @@ class BoardViewSet(viewsets.ModelViewSet):
 
 class TaskViewSet(viewsets.ModelViewSet):
     """
-    ViewSet für Task CRUD-Operationen
+    Schnittstelle für die Aufgabenverwaltung.
 
-    Endpoints:
-    - GET /api/tasks/ - Liste aller Tasks
-    - POST /api/tasks/ - Task erstellen
-    - GET /api/tasks/{id}/ - Task-Details
-    - PATCH /api/tasks/{id}/ - Task aktualisieren
-    - DELETE /api/tasks/{id}/ - Task löschen
-    - GET /api/tasks/assigned-to-me/ - Mir zugewiesene Tasks
-    - GET /api/tasks/reviewing/ - Tasks die ich reviewen soll
+    Ermöglicht das Erstellen, Bearbeiten und Filtern von Aufgaben innerhalb 
+    verschiedener Boards. Unterstützt spezielle Ansichten für zugewiesene Aufgaben.
     """
     queryset = Task.objects.all()
     permission_classes = [IsAuthenticated, IsTaskAssignedOrOwner]
 
     def get_serializer_class(self):
         """
-        Nutze DetailSerializer für einzelne Tasks
+        Wählt TaskDetailSerializer für die Einzelansicht, um zusätzliche 
+        Informationen wie Kommentare einzuschließen.
         """
         if self.action == 'retrieve':
             return TaskDetailSerializer
@@ -103,8 +103,10 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        User sieht nur Tasks aus eigenen Boards
-        oder Tasks die ihm zugewiesen sind
+        Bestimmt die sichtbaren Aufgaben für den Benutzer.
+        
+        Ein Benutzer sieht Aufgaben, wenn er entweder der Besitzer des 
+        entsprechenden Boards oder der Bearbeiter (assigned_to) der Aufgabe ist.
         """
         user = self.request.user
         return Task.objects.filter(
@@ -113,11 +115,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             assigned_to=user
         )
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], url_path='assigned-to-me')
     def assigned_to_me(self, request):
         """
-        GET /api/tasks/assigned-to-me/
-        Gibt alle Tasks zurück, die dem User zugewiesen sind
+        Filtert alle Aufgaben, die dem aktuell angemeldeten Benutzer 
+        zugewiesen wurden.
         """
         tasks = Task.objects.filter(assigned_to=request.user)
         serializer = self.get_serializer(tasks, many=True)
@@ -126,8 +128,8 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def reviewing(self, request):
         """
-        GET /api/tasks/reviewing/
-        Gibt alle Tasks zurück, die der User reviewen soll
+        Gibt eine Liste von Aufgaben zurück, bei denen der aktuelle 
+        Benutzer als Reviewer eingetragen ist.
         """
         tasks = Task.objects.filter(reviewer=request.user)
         serializer = self.get_serializer(tasks, many=True)
@@ -136,26 +138,26 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
-    ViewSet für Comment CRUD-Operationen
+    Schnittstelle für Kommentare zu Aufgaben.
 
-    Endpoints:
-    - GET /api/tasks/{task_id}/comments/ - Alle Comments einer Task
-    - POST /api/tasks/{task_id}/comments/ - Comment erstellen
-    - DELETE /api/tasks/{task_id}/comments/{id}/ - Comment löschen
+    Diese View ist für die Nutzung mit verschachtelten Routern optimiert 
+    (Nested Routes), um Kommentare direkt unterhalb einer Task-ID zu verwalten.
     """
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsCommentAuthorOrReadOnly]
 
     def get_queryset(self):
         """
-        Filtere Comments nach Task
+        Extrahiert die task_id aus der URL-Struktur, um nur Kommentare 
+        der spezifischen Aufgabe anzuzeigen.
         """
         task_id = self.kwargs.get('task_pk')
         return Comment.objects.filter(task_id=task_id)
 
     def perform_create(self, serializer):
         """
-        Setze Author und Task automatisch
+        Speichert einen neuen Kommentar und verknüpft ihn automatisch 
+        mit dem angemeldeten Benutzer und der Aufgabe aus der URL.
         """
         task_id = self.kwargs.get('task_pk')
         serializer.save(

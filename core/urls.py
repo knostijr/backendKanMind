@@ -1,24 +1,28 @@
 """
-URL configuration for core project.
+Zentrale URL-Konfiguration des core-Projekts.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+Dieses Modul fungiert als Hauptverteiler (Root URLconf). Es delegiert die 
+eingehenden Anfragen basierend auf ihren Pfaden an das Django-Admin-Interface 
+oder die spezifischen API-Module der installierten Apps.
+
+Struktur:
+- /admin/         : Zugriff auf das Django Administration Backend.
+- /api/           : Einstiegspunkt für alle Authentifizierungs-Ressourcen (auth_app).
+- /api/           : Einstiegspunkt für alle Kanban-Ressourcen (kanban_app).
 """
+
 from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
+    # Schnittstelle für das integrierte Django-Administrations-Backend.
     path('admin/', admin.site.urls),
+
+    # Einbindung der Authentifizierungs-Endpunkte (Login, Registrierung).
+    # Durch das Präfix 'api/' sind diese unter /api/login/ etc. erreichbar.
     path('api/', include('auth_app.api.urls')),
+
+    # Einbindung der Kanban-Kernressourcen (Boards, Tasks, Kommentare).
+    # Diese teilen sich das 'api/'-Präfix für eine konsistente URL-Struktur.
     path('api/', include('kanban_app.api.urls')),
 ]

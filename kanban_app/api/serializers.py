@@ -10,13 +10,17 @@ from kanban_app.models import Board, Comment, Task
 
 class CommentSerializer(serializers.ModelSerializer):
     """
-    Serializer für Comments
+    Serializer für Kommentar-Objekte.
+    
+    Zusätzlich zu den Basisdaten wird der Benutzername des Autors 
+    über eine ReadOnly-Quelle eingebunden, um die Frontend-Anzeige zu erleichtern.
     """
     author_username = serializers.ReadOnlyField(
         source='author.username'
     )
 
     class Meta:
+        """Konfiguration des CommentSerializers."""
         model = Comment
         fields = [
             'id',
@@ -32,7 +36,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     """
-    Serializer für Tasks
+    Basis-Serializer für Aufgaben (Tasks).
+    
+    Beinhaltet Informationen zu Bearbeitern, Reviewern und eine 
+    zusammenfassende Anzahl der vorhandenen Kommentare.
     """
     assigned_to_username = serializers.ReadOnlyField(
         source='assigned_to.username'
@@ -43,6 +50,7 @@ class TaskSerializer(serializers.ModelSerializer):
     comments_count = serializers.SerializerMethodField()
 
     class Meta:
+        """Konfiguration des TaskSerializers."""
         model = Task
         fields = [
             'id',
@@ -64,24 +72,33 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_comments_count(self, obj):
         """
-        Zähle Anzahl der Comments für diese Task
+        Berechnet die Gesamtzahl der Kommentare, die mit dieser Task verknüpft sind.
+        
+        Args:
+            obj (Task): Die aktuelle Task-Instanz.
         """
         return obj.comments.count()
 
 
 class TaskDetailSerializer(TaskSerializer):
     """
-    Detaillierter Task-Serializer mit allen Comments
+    Detaillierte Ansicht einer Aufgabe.
+    
+    Erweitert den Basis-TaskSerializer um die vollständige Liste 
+    aller zugehörigen Kommentare (verschachtelte Serialisierung).
     """
     comments = CommentSerializer(many=True, read_only=True)
 
     class Meta(TaskSerializer.Meta):
+        """Erweitert die Meta-Felder der Basis-Klasse um die 'comments'."""
         fields = TaskSerializer.Meta.fields + ['comments']
 
 
 class BoardSerializer(serializers.ModelSerializer):
     """
-    Serializer für Boards
+    Basis-Serializer für Kanban-Boards.
+    
+    Liefert Eckdaten zum Board sowie die Anzahl der enthaltenen Aufgaben zurück.
     """
     owner_username = serializers.ReadOnlyField(
         source='owner.username'
@@ -89,6 +106,7 @@ class BoardSerializer(serializers.ModelSerializer):
     tasks_count = serializers.SerializerMethodField()
 
     class Meta:
+        """Konfiguration des BoardSerializers."""
         model = Board
         fields = [
             'id',
@@ -104,16 +122,23 @@ class BoardSerializer(serializers.ModelSerializer):
 
     def get_tasks_count(self, obj):
         """
-        Zähle Anzahl der Tasks in diesem Board
+        Berechnet die Anzahl der Aufgaben innerhalb dieses Boards.
+        
+        Args:
+            obj (Board): Die aktuelle Board-Instanz.
         """
         return obj.tasks.count()
 
 
 class BoardDetailSerializer(BoardSerializer):
     """
-    Detaillierter Board-Serializer mit allen Tasks
+    Detaillierte Ansicht eines Boards.
+    
+    Erweitert den BoardSerializer um eine Liste aller enthaltenen Tasks. 
+    Wird typischerweise in der Detail-Abfrage (Retrieve) genutzt.
     """
     tasks = TaskSerializer(many=True, read_only=True)
 
     class Meta(BoardSerializer.Meta):
+        """Erweitert die Meta-Felder der Basis-Klasse um die 'tasks'."""
         fields = BoardSerializer.Meta.fields + ['tasks']
